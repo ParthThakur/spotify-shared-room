@@ -1,20 +1,19 @@
 import string
 import random
-# import uuid
+import uuid
 from django.db import models
 
 
-def generate_unique_code(length=6):
+def generate_unique_code(length=32):
     while True:
-        code = ''.join(random.choices(string.ascii_uppercase, k=length))
-        if Room.objects.filter(code=code).exists():
+        code = uuid.uuid4().hex[:length]
+        if not Room.objects.filter(code=code).exists():
             break
     return code
 
 
 class Room(models.Model):
-    code = models.CharField(max_length=8, default='', unique=True)
-    # code = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    code = models.CharField(max_length=32, default='', unique=True)
     host = models.CharField(max_length=50, unique=True)
     guest_can_pause = models.BooleanField(null=False, default=False)
     votes_to_skip = models.PositiveIntegerField(null=False, default=1)
