@@ -1,4 +1,3 @@
-from django.shortcuts import render
 from django.http import JsonResponse
 from rest_framework import generics, status
 from rest_framework.views import APIView
@@ -26,17 +25,17 @@ class GetRoom(APIView):
                 data['is_host'] = self.request.session.session_key == room[0].host
                 return Response(data, status=status.HTTP_200_OK)
             return Response({'Error': 'Room does not exist or invalid code.'}, status=status.HTTP_404_NOT_FOUND)
-        
+
         return Response({'Error': 'Bad request'}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class CreateRoomView(APIView):
+class CreateRoom(APIView):
     serializer_class = CreateRoomSerializer
 
     def post(self, request, format=None):
         if not self.request.session.exists(self.request.session.session_key):
             self.request.session.create()
-        
+
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
             host = self.request.session.session_key
@@ -55,10 +54,10 @@ class CreateRoomView(APIView):
                             guest_can_pause=gcp,
                             votes_to_skip=vts)
                 room.save()
-            
+
             self.request.session['room_code'] = room.code
             return Response(RoomSerializer(room).data, status=status.HTTP_202_ACCEPTED)
-        
+
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -68,7 +67,7 @@ class JoinRoom(APIView):
     def post(self, request, format=None):
         if not self.request.session.exists(self.request.session.session_key):
             self.request.session.create()
-        
+
         code = request.data.get(self.lookup_url_kwrg)
         if code is not None:
             queryset = Room.objects.filter(code=code)
@@ -83,8 +82,8 @@ class JoinRoom(APIView):
 class UserInRoom(APIView):
     def get(self, request, format=None):
         if not self.request.session.exists(self.request.session.session_key):
-                self.request.session.create()
-        
+            self.request.session.create()
+
         data = {
             'code': self.request.session.get('room_code')
         }
@@ -99,10 +98,10 @@ class LeaveRoom(APIView):
             if host.exists():
                 host[0].delete()
             return Response(
-                    {
+                {
                     'Success': 'Left room successfully',
                     'user_was_host': host.exists()
-                    }, 
-                    status=status.HTTP_202_ACCEPTED)
+                },
+                status=status.HTTP_202_ACCEPTED)
 
         return Response({'Error': 'Not currently in room'}, status=status.HTTP_400_BAD_REQUEST)
