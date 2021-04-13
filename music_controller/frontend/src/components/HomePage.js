@@ -21,6 +21,35 @@ import Room from "./Room";
 export default class HomePage extends Component {
   constructor(props) {
     super(props);
+
+    this.state = {
+      room_code: false,
+    };
+  }
+
+  async componentDidMount() {
+    fetch("/api/userInRoom")
+      .then((response) => response.json())
+      .then((data) => {
+        this.setState({
+          room_code: data.code,
+        });
+      });
+  }
+
+  joinCurrentRoom() {
+    if (this.state.room_code) {
+      return (
+        <Button
+          color="default"
+          to={`/room/${this.state.room_code}`}
+          component={Link}
+        >
+          Join previous room
+        </Button>
+      );
+    }
+    return null;
   }
 
   renderHomePage() {
@@ -40,6 +69,9 @@ export default class HomePage extends Component {
               Create a Room
             </Button>
           </ButtonGroup>
+        </Grid>
+        <Grid item xs={12}>
+          {this.joinCurrentRoom()}
         </Grid>
       </Grid>
     );
