@@ -13,6 +13,8 @@ export default class Room extends Component {
     };
     this.roomCode = this.props.match.params.roomCode;
     this.getRoomDetails();
+
+    this.leaveRoom = this.leaveRoom.bind(this);
   }
 
   getRoomDetails() {
@@ -27,6 +29,20 @@ export default class Room extends Component {
       });
   }
 
+  leaveRoom() {
+    const requestOptions = {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        code: this.state.roomCode,
+      }),
+    };
+    fetch("/api/leaveRoom", requestOptions).then((response) => {
+      console.log(response);
+      this.props.history.push("/");
+    });
+  }
+
   render() {
     return (
       <Grid container spacing={1} align="center">
@@ -38,7 +54,7 @@ export default class Room extends Component {
           <p>Host: {this.state.isHost.toString()}</p>
         </Grid>
         <Grid item xs={12}>
-          <Button variant="contained" color="default" to="/" component={Link}>
+          <Button variant="contained" color="default" onClick={this.leaveRoom}>
             Leave Room
           </Button>
         </Grid>
