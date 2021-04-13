@@ -1,4 +1,6 @@
 import React, { Component } from "react";
+import { Button, Grid, Typography } from "@material-ui/core";
+import { Link } from "react-router-dom";
 
 export default class Room extends Component {
   constructor(props) {
@@ -27,13 +29,20 @@ export default class Room extends Component {
 
   render() {
     return (
-      <div>
-        <h1>Room details:</h1>
-        <p>Room code: {this.roomCode}</p>
-        <p>Votes: {this.state.votesToSkip}</p>
-        <p>Guest can pause: {this.state.guestsCanPause.toString()}</p>
-        <p>Host: {this.state.isHost.toString()}</p>
-      </div>
+      <Grid container spacing={1} align="center">
+        <Grid item xs={12} align="left">
+          <h1>Room details:</h1>
+          <p>Room code: {this.roomCode}</p>
+          <p>Votes: {this.state.votesToSkip}</p>
+          <p>Guest can pause: {this.state.guestsCanPause.toString()}</p>
+          <p>Host: {this.state.isHost.toString()}</p>
+        </Grid>
+        <Grid item xs={12}>
+          <Button variant="contained" color="default" to="/" component={Link}>
+            Leave Room
+          </Button>
+        </Grid>
+      </Grid>
     );
   }
 }
