@@ -89,3 +89,20 @@ class UserInRoom(APIView):
             'code': self.request.session.get('room_code')
         }
         return JsonResponse(data, status=status.HTTP_200_OK)
+
+
+class LeaveRoom(APIView):
+    def post(self, request, format=None):
+        if 'room_code' in request.session:
+            self.request.session.pop('room_code')
+            host = Room.objects.filter(host=request.session.session_key)
+            if host.exists():
+                host[0].delete()
+            return Response(
+                    {
+                    'Success': 'Left room successfully',
+                    'user_was_host': host.exists()
+                    }, 
+                    status=status.HTTP_202_ACCEPTED)
+
+        return Response({'Error': 'Not currently in room'}, status=status.HTTP_400_BAD_REQUEST)
