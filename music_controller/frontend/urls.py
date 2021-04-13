@@ -3,5 +3,6 @@ from .views import index
 
 urlpatterns = [
     path('', index),
-    path('<str:page>', index)
+    path('room/<str:roomCode>', index),
+    path('<str:page>', index),
 ]
