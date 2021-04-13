@@ -54,8 +54,26 @@ class CreateRoomView(APIView):
                             guest_can_pause=gcp,
                             votes_to_skip=vts)
                 room.save()
-
+            
+            self.request.session['room_code'] = room.code
             return Response(RoomSerializer(room).data, status=status.HTTP_202_ACCEPTED)
         
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
+
+class JoinRoom(APIView):
+    lookup_url_kwrg = 'code'
+
+    def post(self, request, format=None):
+        if not self.request.session.exists(self.request.session.session_key):
+            self.request.session.create()
+        
+        code = request.data.get(self.lookup_url_kwrg)
+        if code is not None:
+            queryset = Room.objects.filter(code=code)
+            if queryset.exists():
+                room = queryset[0]
+                self.request.session['room_code'] = code
+                return Response({'Success': 'Room joined successfully'}, status=status.HTTP_200_OK)
+            return Response({'Error': 'Room not found'}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'Error': 'Bad Request'}, status=status.HTTP_400_BAD_REQUEST)
