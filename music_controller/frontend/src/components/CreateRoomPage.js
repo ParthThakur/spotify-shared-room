@@ -76,20 +76,22 @@ export default class CreateRoomPage extends Component {
         code: this.props.room_code,
       }),
     };
-    fetch("/api/updateRoom", requestOptions).then((response) => {
-      if (response.ok) {
-        this.props.updateCallback();
-        this.setState({
-          message: "Success",
-          backButtonText: "Go back",
-        });
-      } else {
-        this.setState({
-          message: "Error",
-          isError: true,
-        });
-      }
-    });
+    fetch("/api/updateRoom", requestOptions)
+      .then((response) => response.json())
+      .then((response) => {
+        if (response["Success"]) {
+          this.props.updateCallback();
+          this.setState({
+            message: response["Success"],
+            backButtonText: "Go back",
+          });
+        } else {
+          this.setState({
+            message: response["Error"],
+            isError: true,
+          });
+        }
+      });
   }
 
   createButtons() {
@@ -192,7 +194,9 @@ export default class CreateRoomPage extends Component {
           {BUTTONS()}
         </Grid>
         <Grid item xs={12} align="center">
-          <Collapse in={this.state.message != ""}></Collapse>
+          <Collapse in={this.state.message != ""}>
+            {this.state.message}
+          </Collapse>
         </Grid>
       </Grid>
     );
