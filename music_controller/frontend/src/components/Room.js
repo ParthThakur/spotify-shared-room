@@ -69,7 +69,12 @@ export default class Room extends Component {
             votes_to_skip={this.state.votesToSkip}
             guest_can_pause={this.state.guestsCanPause}
             room_code={this.roomCode}
-            updateCallback={() => {}}
+            updateCallback={() => {
+              this.getRoomDetails();
+            }}
+            goBack={() => {
+              this.toggleSettings();
+            }}
           />
         </Grid>
       </Grid>

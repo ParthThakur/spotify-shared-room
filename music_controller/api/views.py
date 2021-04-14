@@ -118,9 +118,9 @@ class UpdateRoom(APIView):
                 room = queryset[0]                
                 user_id = self.request.session.session_key
                 if room.host == user_id:
-                    room.guest_can_pause = serializer.data.get('guests_can_pause')
+                    room.guest_can_pause = serializer.data.get('guest_can_pause')
                     room.votes_to_skip = serializer.data.get('votes_to_skip')
-                    room.save(update_fields=['guests_can_pause', 'votes_to_skip'])
+                    room.save(update_fields=['guest_can_pause', 'votes_to_skip'])
 
                     return responses.SUCCESS_UPDATED
                 

@@ -19,6 +19,7 @@ export default class CreateRoomPage extends Component {
     update: false,
     roomCode: null,
     updateCallback: () => {},
+    goBack: () => {},
   };
 
   constructor(props) {
@@ -26,6 +27,7 @@ export default class CreateRoomPage extends Component {
     this.state = {
       guestCanPause: this.props.guestCanPause,
       votesToSkip: this.props.votesToSkip,
+      backButtonText: "Cancel",
       message: "",
       isError: false,
     };
@@ -71,23 +73,23 @@ export default class CreateRoomPage extends Component {
       body: JSON.stringify({
         votes_to_skip: this.state.votesToSkip,
         guest_can_pause: this.state.guestCanPause,
-        code: this.state.roomCode,
+        code: this.props.room_code,
       }),
     };
-    fetch("/api/updateRoom", requestOptions)
-      .then((response) => response.json())
-      .then((response) => {
-        if (response.ok) {
-          this.setState({
-            message: response["Success"],
-          });
-        } else {
-          this.setState({
-            message: response["Error"],
-            isError: true,
-          });
-        }
-      });
+    fetch("/api/updateRoom", requestOptions).then((response) => {
+      if (response.ok) {
+        this.props.updateCallback();
+        this.setState({
+          message: "Success",
+          backButtonText: "Go back",
+        });
+      } else {
+        this.setState({
+          message: "Error",
+          isError: true,
+        });
+      }
+    });
   }
 
   createButtons() {
@@ -96,7 +98,7 @@ export default class CreateRoomPage extends Component {
         <Button
           color="primary"
           variant="contained"
-          onClick={this.handleCreateRoomButtonPressed}
+          onClick={this.handleCreateRoomPressed}
         >
           Create A Room
         </Button>
@@ -117,18 +119,29 @@ export default class CreateRoomPage extends Component {
         >
           Save settings
         </Button>
-        <Button color="secondary" variant="contained" onClick={() => {}}>
-          Cancel
+        <Button
+          color="secondary"
+          variant="contained"
+          onClick={this.props.goBack}
+        >
+          {this.state.backButtonText}
         </Button>
       </ButtonGroup>
     );
   }
 
   render() {
-    const TITLE = this.props.update ? "Update Room" : "Create a Room";
-    const BUTTONS = this.props.update ? this.updateButtons : this.createButtons;
-    const PLAY_PAUSE_DEFAULT = this.props.guest_can_pause.toString();
-    const VOTES_TO_SKIP = this.props.votes_to_skip;
+    let TITLE = "Create a Room";
+    let BUTTONS = this.createButtons;
+    let PLAY_PAUSE_DEFAULT = "false";
+    let VOTES_TO_SKIP = 2;
+
+    if (this.props.update) {
+      TITLE = "Update Room";
+      BUTTONS = this.updateButtons;
+      PLAY_PAUSE_DEFAULT = this.props.guest_can_pause.toString();
+      VOTES_TO_SKIP = this.props.votes_to_skip;
+    }
 
     return (
       <Grid container spacing={1}>
@@ -177,6 +190,9 @@ export default class CreateRoomPage extends Component {
         </Grid>
         <Grid item xs={12} align="center">
           {BUTTONS()}
+        </Grid>
+        <Grid item xs={12} align="center">
+          <Collapse in={this.state.message != ""}></Collapse>
         </Grid>
       </Grid>
     );
