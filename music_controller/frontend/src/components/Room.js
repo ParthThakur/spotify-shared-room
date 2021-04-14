@@ -72,20 +72,6 @@ export default class Room extends Component {
             updateCallback={() => {}}
           />
         </Grid>
-        <Grid item xs={6}>
-          <Button variant="contained" color="primary">
-            Save
-          </Button>
-        </Grid>
-        <Grid item xs={6}>
-          <Button
-            variant="contained"
-            color="secondary"
-            onClick={this.toggleSettings}
-          >
-            Back
-          </Button>
-        </Grid>
       </Grid>
     );
   }
