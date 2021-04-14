@@ -10,6 +10,7 @@ import { Link } from "react-router-dom";
 import Radio from "@material-ui/core/Radio";
 import RadioGroup from "@material-ui/core/RadioGroup";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
+import Collapse from "@material-ui/core/Collapse";
 
 export default class CreateRoomPage extends Component {
   static defaultProps = {
@@ -25,12 +26,16 @@ export default class CreateRoomPage extends Component {
     this.state = {
       guestCanPause: this.props.guestCanPause,
       votesToSkip: this.props.votesToSkip,
+      message: "",
+      isError: false,
     };
 
-    this.handleRoomButtonPressed = this.handleRoomButtonPressed.bind(this);
+    this.handleCreateRoomPressed = this.handleCreateRoomPressed.bind(this);
+    this.handleUpdateRoomPressed = this.handleUpdateRoomPressed.bind(this);
     this.handleVotesChange = this.handleVotesChange.bind(this);
     this.handleGuestCanPauseChange = this.handleGuestCanPauseChange.bind(this);
     this.createButtons = this.createButtons.bind(this);
+    this.updateButtons = this.updateButtons.bind(this);
   }
 
   handleVotesChange(e) {
@@ -45,7 +50,7 @@ export default class CreateRoomPage extends Component {
     });
   }
 
-  handleRoomButtonPressed() {
+  handleCreateRoomPressed() {
     const requestOptions = {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -59,13 +64,39 @@ export default class CreateRoomPage extends Component {
       .then((data) => this.props.history.push(`/room/${data.code}`));
   }
 
+  handleUpdateRoomPressed() {
+    const requestOptions = {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        votes_to_skip: this.state.votesToSkip,
+        guest_can_pause: this.state.guestCanPause,
+        code: this.state.roomCode,
+      }),
+    };
+    fetch("/api/updateRoom", requestOptions)
+      .then((response) => response.json())
+      .then((response) => {
+        if (response.ok) {
+          this.setState({
+            message: response["Success"],
+          });
+        } else {
+          this.setState({
+            message: response["Error"],
+            isError: true,
+          });
+        }
+      });
+  }
+
   createButtons() {
     return (
       <ButtonGroup>
         <Button
           color="primary"
           variant="contained"
-          onClick={this.handleRoomButtonPressed}
+          onClick={this.handleCreateRoomButtonPressed}
         >
           Create A Room
         </Button>
@@ -79,7 +110,11 @@ export default class CreateRoomPage extends Component {
   updateButtons() {
     return (
       <ButtonGroup>
-        <Button color="primary" variant="contained" onClick={() => {}}>
+        <Button
+          color="primary"
+          variant="contained"
+          onClick={this.handleUpdateRoomPressed}
+        >
           Save settings
         </Button>
         <Button color="secondary" variant="contained" onClick={() => {}}>
@@ -92,6 +127,8 @@ export default class CreateRoomPage extends Component {
   render() {
     const TITLE = this.props.update ? "Update Room" : "Create a Room";
     const BUTTONS = this.props.update ? this.updateButtons : this.createButtons;
+    const PLAY_PAUSE_DEFAULT = this.props.guest_can_pause.toString();
+    const VOTES_TO_SKIP = this.props.votes_to_skip;
 
     return (
       <Grid container spacing={1}>
@@ -105,7 +142,7 @@ export default class CreateRoomPage extends Component {
             <FormHelperText>Guest Control of Playback State</FormHelperText>
             <RadioGroup
               row
-              defaultValue="true"
+              defaultValue={PLAY_PAUSE_DEFAULT}
               onChange={this.handleGuestCanPauseChange}
             >
               <FormControlLabel
@@ -129,7 +166,7 @@ export default class CreateRoomPage extends Component {
               required={true}
               type="number"
               onChange={this.handleVotesChange}
-              defaultValue={this.state.votesToSkip}
+              defaultValue={VOTES_TO_SKIP}
               inputProps={{
                 min: 1,
                 style: { textAlign: "center" },
