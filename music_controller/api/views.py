@@ -5,6 +5,7 @@ from rest_framework.response import Response
 
 from .models import Room
 from .serializers import RoomSerializer, CreateRoomSerializer
+import api.responses as responses
 
 
 class RoomView(generics.ListAPIView):
@@ -24,9 +25,9 @@ class GetRoom(APIView):
                 data = self.serializer_class(room[0]).data
                 data['is_host'] = self.request.session.session_key == room[0].host
                 return Response(data, status=status.HTTP_200_OK)
-            return Response({'Error': 'Room does not exist or invalid code.'}, status=status.HTTP_404_NOT_FOUND)
+            return responses.ERROR_DOES_NOT_ESIST
 
-        return Response({'Error': 'Bad request'}, status=status.HTTP_400_BAD_REQUEST)
+        return responses.ERROR_BAD_REQUEST
 
 
 class CreateRoom(APIView):
@@ -74,9 +75,9 @@ class JoinRoom(APIView):
             if queryset.exists():
                 room = queryset[0]
                 self.request.session['room_code'] = code
-                return Response({'Success': 'Room joined successfully'}, status=status.HTTP_200_OK)
-            return Response({'Error': 'Room not found'}, status=status.HTTP_404_NOT_FOUND)
-        return Response({'Error': 'Bad Request'}, status=status.HTTP_400_BAD_REQUEST)
+                return responses.SUCCESS_JOINED
+            return responses.ERROR_DOES_NOT_ESIST
+        return responses.ERROR_BAD_REQUEST
 
 
 class UserInRoom(APIView):
@@ -97,11 +98,6 @@ class LeaveRoom(APIView):
             host = Room.objects.filter(host=request.session.session_key)
             if host.exists():
                 host[0].delete()
-            return Response(
-                {
-                    'Success': 'Left room successfully',
-                    'user_was_host': host.exists()
-                },
-                status=status.HTTP_202_ACCEPTED)
+            return responses.SUCCESS_LEFT
 
-        return Response({'Error': 'Not currently in room'}, status=status.HTTP_400_BAD_REQUEST)
+        return responses.ERROR_NOT_IN_ROOM
