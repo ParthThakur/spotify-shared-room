@@ -1,6 +1,17 @@
 import React, { Component } from "react";
 import { render } from "react-dom";
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route,
+  Link,
+  Redirect,
+} from "react-router-dom";
+
 import HomePage from "./HomePage";
+import JoinRoomPage from "./JoinRoomPage";
+import CreateRoomPage from "./CreateRoomPage";
+import Room from "./Room";
 
 export default class App extends Component {
   constructor(props) {
@@ -10,7 +21,14 @@ export default class App extends Component {
   render() {
     return (
       <div className="center">
-        <HomePage />
+        <Router>
+          <Switch>
+            <Route exact path="/" component={HomePage} />
+            <Route exact path="/join" component={JoinRoomPage} />
+            <Route exact path="/create" component={CreateRoomPage} />
+            <Route path="/room/:roomCode" component={Room} />
+          </Switch>
+        </Router>
       </div>
     );
   }
