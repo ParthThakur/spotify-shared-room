@@ -4,7 +4,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 
 from .models import Room
-from .serializers import RoomSerializer, CreateRoomSerializer
+from .serializers import RoomSerializer, CreateRoomSerializer, UpdateRoomSerializer
 import api.responses as responses
 
 
@@ -25,7 +25,7 @@ class GetRoom(APIView):
                 data = self.serializer_class(room[0]).data
                 data['is_host'] = self.request.session.session_key == room[0].host
                 return Response(data, status=status.HTTP_200_OK)
-            return responses.ERROR_DOES_NOT_ESIST
+            return responses.ERROR_DOES_NOT_EXIST
 
         return responses.ERROR_BAD_REQUEST
 
@@ -76,7 +76,7 @@ class JoinRoom(APIView):
                 room = queryset[0]
                 self.request.session['room_code'] = code
                 return responses.SUCCESS_JOINED
-            return responses.ERROR_DOES_NOT_ESIST
+            return responses.ERROR_DOES_NOT_EXIST
         return responses.ERROR_BAD_REQUEST
 
 
@@ -101,3 +101,32 @@ class LeaveRoom(APIView):
             return responses.SUCCESS_LEFT
 
         return responses.ERROR_NOT_IN_ROOM
+
+
+class UpdateRoom(APIView):
+    serializer_class = UpdateRoomSerializer
+
+    def patch(self, request, format=None):
+        if not self.request.session.exists(self.request.session.session_key):
+            self.request.session.create()
+        
+        serializer = self.serializer_class(data=self.request.data)
+        if serializer.is_valid():
+            room_code = serializer.data.get('code')
+            queryset = Room.objects.filter(code=room_code)
+            if queryset.exists():
+                room = queryset[0]                
+                user_id = self.request.session.session_key
+                if room.host == user_id:
+                    room.guest_can_pause = serializer.data.get('guests_can_pause')
+                    room.votes_to_skip = serializer.data.get('votes_to_skip')
+                    room.save(update_fields=['guests_can_pause', 'votes_to_skip'])
+
+                    return responses.SUCCESS_UPDATED
+                
+                return responses.ERROR_NOT_A_HOST
+
+            return responses.ERROR_DOES_NOT_EXIST       
+        
+        return responses.ERROR_BAD_REQUEST
+
