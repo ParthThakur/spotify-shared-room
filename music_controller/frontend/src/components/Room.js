@@ -1,6 +1,8 @@
 import React, { Component } from "react";
-import { Button, Grid, Typography } from "@material-ui/core";
+import { Button, ButtonGroup, Grid, Typography } from "@material-ui/core";
 import { Link } from "react-router-dom";
+
+import CreateRoomPage from "./CreateRoomPage";
 
 export default class Room extends Component {
   constructor(props) {
@@ -10,11 +12,13 @@ export default class Room extends Component {
       votesToSkip: 2,
       guestsCanPause: false,
       isHost: false,
+      showSettings: false,
     };
     this.roomCode = this.props.match.params.roomCode;
     this.getRoomDetails();
 
     this.leaveRoom = this.leaveRoom.bind(this);
+    this.toggleSettings = this.toggleSettings.bind(this);
   }
 
   getRoomDetails() {
@@ -38,27 +42,81 @@ export default class Room extends Component {
       }),
     };
     fetch("/api/leaveRoom", requestOptions).then((response) => {
-      console.log(response);
       this.props.history.push("/");
     });
   }
 
-  render() {
+  toggleSettings() {
+    this.setState((prevState) => ({
+      showSettings: !prevState.showSettings,
+    }));
+  }
+
+  showSettingsButton() {
+    return (
+      <Button variant="contained" color="default" onClick={this.toggleSettings}>
+        Settings
+      </Button>
+    );
+  }
+
+  renderSettings() {
     return (
       <Grid container spacing={1} align="center">
-        <Grid item xs={12} align="left">
-          <h1>Room details:</h1>
-          <p>Room code: {this.roomCode}</p>
-          <p>Votes: {this.state.votesToSkip}</p>
-          <p>Guest can pause: {this.state.guestsCanPause.toString()}</p>
-          <p>Host: {this.state.isHost.toString()}</p>
-        </Grid>
         <Grid item xs={12}>
-          <Button variant="contained" color="default" onClick={this.leaveRoom}>
-            Leave Room
+          <CreateRoomPage
+            update={true}
+            votes_to_skip={this.state.votesToSkip}
+            guest_can_pause={this.state.guestsCanPause}
+            room_code={this.roomCode}
+            updateCallback={() => {}}
+          />
+        </Grid>
+        <Grid item xs={6}>
+          <Button variant="contained" color="primary">
+            Save
+          </Button>
+        </Grid>
+        <Grid item xs={6}>
+          <Button
+            variant="contained"
+            color="secondary"
+            onClick={this.toggleSettings}
+          >
+            Back
           </Button>
         </Grid>
       </Grid>
     );
+  }
+
+  render() {
+    if (this.state.showSettings) {
+      return this.renderSettings();
+    } else {
+      return (
+        <Grid container spacing={1} align="center">
+          <Grid item xs={12} align="left">
+            <h1>Room details:</h1>
+            <p>Room code: {this.roomCode}</p>
+            <p>Votes: {this.state.votesToSkip}</p>
+            <p>Guest can pause: {this.state.guestsCanPause.toString()}</p>
+            <p>Host: {this.state.isHost.toString()}</p>
+          </Grid>
+          <Grid item xs={12}>
+            <ButtonGroup>
+              <Button
+                variant="contained"
+                color="default"
+                onClick={this.leaveRoom}
+              >
+                Leave Room
+              </Button>
+              {this.state.isHost ? this.showSettingsButton() : null}
+            </ButtonGroup>
+          </Grid>
+        </Grid>
+      );
+    }
   }
 }
