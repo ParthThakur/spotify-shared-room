@@ -11,6 +11,7 @@ import Radio from "@material-ui/core/Radio";
 import RadioGroup from "@material-ui/core/RadioGroup";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
 import Collapse from "@material-ui/core/Collapse";
+import Alert from "@material-ui/lab/Alert";
 
 export default class CreateRoomPage extends Component {
   static defaultProps = {
@@ -195,7 +196,14 @@ export default class CreateRoomPage extends Component {
         </Grid>
         <Grid item xs={12} align="center">
           <Collapse in={this.state.message != ""}>
-            {this.state.message}
+            <Alert
+              severity={this.state.isError ? "error" : "success"}
+              onClose={() => {
+                this.setState({ message: "" });
+              }}
+            >
+              {this.state.message}
+            </Alert>
           </Collapse>
         </Grid>
       </Grid>
