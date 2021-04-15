@@ -3,8 +3,8 @@ from rest_framework import generics, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from .models import Room
-from .serializers import RoomSerializer, CreateRoomSerializer, UpdateRoomSerializer
+from .models import Room, Host, User
+from .serializers import RoomSerializer, CreateRoomSerializer, UpdateRoomSerializer, HostSerialiser
 import api.responses as responses
 
 
@@ -37,9 +37,28 @@ class CreateRoom(APIView):
         if not self.request.session.exists(self.request.session.session_key):
             self.request.session.create()
 
-        serializer = self.serializer_class(data=request.data)
-        if serializer.is_valid():
-            host = self.request.session.session_key
+        try:
+            room_data = {key: request.data[key] for key in ['guest_can_pause', 'votes_to_skip']}
+            host_data = {key: request.data[key] for key in ['nick_name', 'name']}
+        except KeyError:
+            return responses.ERROR_BAD_REQUEST
+
+        serializer = self.serializer_class(data=room_data)
+        serializer_host = self.host_serialiser(data=host_data)
+        if serializer.is_valid() and serializer_host.is_valid():
+            
+            host = Host.objects.filter(id=request.session['code'])
+            host_nick_name = serializer_host.data.get('nick_name')
+            if host.exists():
+                host = host[0]
+                if host.nick_name != host_nick_name:
+                    host.nick_name = host_nick_name
+                    host.save(update_fields=['nick_name'])
+            else:
+                host = Host(nick_name=host_nick_name)
+                host.save()
+                self.request.session['code'] = host.id
+
             queryset = Room.objects.filter(host=host)
             gcp = serializer.data.get('guest_can_pause')
             vts = serializer.data.get('votes_to_skip')
@@ -69,12 +88,17 @@ class JoinRoom(APIView):
         if not self.request.session.exists(self.request.session.session_key):
             self.request.session.create()
 
-        code = request.data.get(self.lookup_url_kwrg)
-        if code is not None:
-            queryset = Room.objects.filter(code=code)
+        room_code = request.data.get(self.lookup_url_kwrg)
+        user_code = request.session['code']
+        if user_code:
+            user = User.objects.get(id=user_code)
+        else:
+            user = User()
+        if room_code is not None:
+            queryset = Room.objects.filter(code=room_code)
             if queryset.exists():
                 room = queryset[0]
-                self.request.session['room_code'] = code
+                self.request.session['room_code'] = room_code
                 return responses.SUCCESS_JOINED
             return responses.ERROR_DOES_NOT_EXIST
         return responses.ERROR_BAD_REQUEST
