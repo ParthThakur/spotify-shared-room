@@ -9,8 +9,6 @@ from .models import Room, User
 from .serializers import RoomSerializer, UserSerializer, CreateRoomSerializer, CreateUserSerializer, UpdateRoomSerializer
 import api.responses as responses
 
-import sys
-
 
 class RoomView(generics.ListAPIView):
     queryset = Room.objects.all()
@@ -96,18 +94,22 @@ class JoinRoom(APIView):
             self.request.session.create()
 
         room_code = request.data.get(self.lookup_url_kwrg)
-        user_code = request.session['code']
+        user_code = request.session.get('user_code')
         if user_code:
             user = User.objects.get(id=user_code)
         else:
             user = User()
-        if room_code is not None:
-            queryset = Room.objects.filter(code=room_code)
-            if queryset.exists():
-                room = queryset[0]
-                self.request.session['room_code'] = room_code
-                return responses.SUCCESS_JOINED
+            user.save()
+
+        try:
+            room = Room.objects.get(code=room_code)
+            self.request.session['room_code'] = room.code
+            user.rooms.add(room)
+            return responses.SUCCESS_JOINED
+
+        except ObjectDoesNotExist:
             return responses.ERROR_DOES_NOT_EXIST
+
         return responses.ERROR_BAD_REQUEST
 
 
