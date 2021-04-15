@@ -146,19 +146,37 @@ class LeaveRoom(APIView):
 
 class UpdateRoom(APIView):
     serializer_class = UpdateRoomSerializer
+    user_serializer = CreateUserSerializer
 
     def patch(self, request, format=None):
         if not self.request.session.exists(self.request.session.session_key):
             self.request.session.create()
+
+        try:
+            room_data = {key: request.data[key] for key in ['guest_can_pause', 'votes_to_skip', 'code']}
+            user_data = {key: request.data[key] for key in ['name', 'nick_name']}
+        except KeyError:
+            return responses.ERROR_BAD_REQUEST
         
-        serializer = self.serializer_class(data=self.request.data)
-        if serializer.is_valid():
+        serializer = self.serializer_class(data=room_data)
+        serializer_user = self.user_serializer(data=user_data)
+        if serializer.is_valid() and serializer_user.is_valid():
+            
+            user_new_nick_name = serializer_user.data.get('nick_name')
+            try:
+                user = User.objects.get(code=request.session.get('user_code'))
+                if user.nick_name != user_new_nick_name:
+                    user.nick_name = user_new_nick_name
+                    user.save(update_fields=['nick_name'])
+
+            except ObjectDoesNotExist:
+                return responses.ERROR_NOT_A_HOST
+
             room_code = serializer.data.get('code')
-            queryset = Room.objects.filter(code=room_code)
-            if queryset.exists():
-                room = queryset[0]                
-                user_id = self.request.session.session_key
-                if room.host == user_id:
+            try:
+                room = Room.objects.get(code=room_code)
+                user_code = self.request.session.get('user_code')
+                if room.host == user_code:
                     room.guest_can_pause = serializer.data.get('guest_can_pause')
                     room.votes_to_skip = serializer.data.get('votes_to_skip')
                     room.save(update_fields=['guest_can_pause', 'votes_to_skip'])
@@ -167,7 +185,9 @@ class UpdateRoom(APIView):
                 
                 return responses.ERROR_NOT_A_HOST
 
-            return responses.ERROR_DOES_NOT_EXIST       
+            except ObjectDoesNotExist:
+                return responses.ERROR_DOES_NOT_EXIST       
         
+        print(request.data)
         return responses.ERROR_BAD_REQUEST
 

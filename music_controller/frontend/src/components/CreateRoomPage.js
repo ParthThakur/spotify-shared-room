@@ -32,6 +32,7 @@ export default class CreateRoomPage extends Component {
       guestCanPause: this.props.guestCanPause,
       votesToSkip: this.props.votesToSkip,
       hostNickName: this.props.hostNickName,
+      hostName: "Anonymous",
       isHostNickNameValid: true,
       backButtonText: "Cancel",
       message: "",
@@ -80,7 +81,7 @@ export default class CreateRoomPage extends Component {
         votes_to_skip: this.state.votesToSkip,
         guest_can_pause: this.state.guestCanPause,
         nick_name: this.state.hostNickName,
-        name: "Anonymous",
+        name: this.state.hostName,
         update: false,
       }),
     };
@@ -97,7 +98,8 @@ export default class CreateRoomPage extends Component {
       body: JSON.stringify({
         votes_to_skip: this.state.votesToSkip,
         guest_can_pause: this.state.guestCanPause,
-        host_nick_name: this.state.hostNickName,
+        nick_name: this.state.hostNickName,
+        name: "Anonymous",
         code: this.props.room_code,
       }),
     };
