@@ -24,12 +24,14 @@ class GetRoom(APIView):
     def get(self, request, format=None):
         code = request.GET.get(self.lookup_url_kwrg)
         if code is not None:
-            room = Room.objects.filter(code=code)
-            if room.exists():
-                data = self.serializer_class(room[0]).data
-                data['is_host'] = self.request.session['host_code'] == room[0].host.id
+            try:
+                room = Room.objects.get(code=code)
+                data = self.serializer_class(room).data
+                data['is_host'] = self.request.session.get('user_code') == room.host
                 return Response(data, status=status.HTTP_200_OK)
-            return responses.ERROR_DOES_NOT_EXIST
+            
+            except ObjectDoesNotExist:
+                return responses.ERROR_DOES_NOT_EXIST
 
         return responses.ERROR_BAD_REQUEST
 
