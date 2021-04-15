@@ -21,7 +21,7 @@ def get_next_host():
 
 class Host(models.Model):
     nick_name = models.CharField(max_length=32, default="Anon")
-
+    id = models.CharField(max_length=32, default=generate_unique_code, primary_key=True)
 
 class Room(models.Model):
     code = models.CharField(max_length=32, default=generate_unique_code, unique=True)

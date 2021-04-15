@@ -25,7 +25,7 @@ class GetRoom(APIView):
             room = Room.objects.filter(code=code)
             if room.exists():
                 data = self.serializer_class(room[0]).data
-                data['is_host'] = self.request.session.session_key == room[0].host
+                data['is_host'] = self.request.session['host_code'] == room[0].host.id
                 return Response(data, status=status.HTTP_200_OK)
             return responses.ERROR_DOES_NOT_EXIST
 
@@ -49,8 +49,18 @@ class CreateRoom(APIView):
         serializer = self.serializer_class(data=room_data)
         serializer_host = self.host_serialiser(data=host_data)
         if serializer.is_valid() and serializer_host.is_valid():
-            host = Host(nick_name=serializer_host.data.get('nick_name'))
-            host.save()
+            
+            host = Host.objects.filter(id=request.session['code'])
+            host_nick_name = serializer_host.data.get('nick_name')
+            if host.exists():
+                host = host[0]
+                if host.nick_name != host_nick_name:
+                    host.nick_name = host_nick_name
+                    host.save(update_fields=['nick_name'])
+            else:
+                host = Host(nick_name=host_nick_name)
+                host.save()
+                self.request.session['code'] = host.id
 
             queryset = Room.objects.filter(host=host)
             gcp = serializer.data.get('guest_can_pause')
