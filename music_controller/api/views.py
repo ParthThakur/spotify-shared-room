@@ -96,7 +96,7 @@ class JoinRoom(APIView):
         room_code = request.data.get(self.lookup_url_kwrg)
         user_code = request.session.get('user_code')
         if user_code:
-            user = User.objects.get(id=user_code)
+            user = User.objects.get(code=user_code)
         else:
             user = User()
             user.save()
@@ -126,12 +126,20 @@ class UserInRoom(APIView):
 
 class LeaveRoom(APIView):
     def post(self, request, format=None):
-        if 'room_code' in request.session:
+
+        room_code = request.session.get('room_code')
+        user_code = request.session.get('user_code')
+
+        try:
+            room = Room.objects.get(code=room_code)
+            user = User.objects.get(code=user_code, rooms=room)
+            user.rooms.remove(room)
             self.request.session.pop('room_code')
-            host = Room.objects.filter(host=request.session.session_key)
-            if host.exists():
-                host[0].delete()
             return responses.SUCCESS_LEFT
+
+        except ObjectDoesNotExist:
+            self.request.session.pop('room_code')
+            return responses.ERROR_NOT_IN_ROOM
 
         return responses.ERROR_NOT_IN_ROOM
 
