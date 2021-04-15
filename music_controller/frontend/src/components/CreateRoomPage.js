@@ -80,6 +80,7 @@ export default class CreateRoomPage extends Component {
         votes_to_skip: this.state.votesToSkip,
         guest_can_pause: this.state.guestCanPause,
         nick_name: this.state.hostNickName,
+        name: "Anonymous",
         update: false,
       }),
     };

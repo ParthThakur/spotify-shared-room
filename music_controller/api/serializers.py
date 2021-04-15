@@ -19,13 +19,13 @@ class RoomSerializer(serializers.ModelSerializer):
 class CreateRoomSerializer(serializers.ModelSerializer):
     class Meta:
         model = Room
-        fields = ('guest_can_pause', 'votes_to_skip', 'host')
+        fields = ('guest_can_pause', 'votes_to_skip')
 
 
 class CreateUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('name', 'nick_name', 'host')
+        fields = ('name', 'nick_name')
 
 
 class UpdateRoomSerializer(serializers.ModelSerializer):
