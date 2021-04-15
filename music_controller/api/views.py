@@ -7,6 +7,8 @@ from .models import Room, User
 from .serializers import RoomSerializer, UserSerializer, CreateRoomSerializer, CreateUserSerializer, UpdateRoomSerializer
 import api.responses as responses
 
+import sys
+
 
 class RoomView(generics.ListAPIView):
     queryset = Room.objects.all()
@@ -23,7 +25,7 @@ class GetRoom(APIView):
             room = Room.objects.filter(code=code)
             if room.exists():
                 data = self.serializer_class(room[0]).data
-                data['is_host'] = self.request.session.session_key == room[0].host
+                data['is_host'] = self.request.session['host_code'] == room[0].host.id
                 return Response(data, status=status.HTTP_200_OK)
             return responses.ERROR_DOES_NOT_EXIST
 
@@ -37,23 +39,39 @@ class CreateRoom(APIView):
     def post(self, request, format=None):
         if not self.request.session.exists(self.request.session.session_key):
             self.request.session.create()
-            
+
         try:
             room_data = {key: request.data[key] for key in ['guest_can_pause', 'votes_to_skip']}
-            user_data = {key: request.data[key] for key in ['name', 'nick_name']}
+            host_data = {key: request.data[key] for key in ['nick_name']}
         except KeyError:
             return responses.ERROR_BAD_REQUEST
 
         serializer = self.serializer_class(data=room_data)
-        serializer_user = self.user_serializer(data=user_data)
-        if serializer.is_valid() and serializer_user.is_valid():
+        serializer_host = self.host_serialiser(data=host_data)
+        if serializer.is_valid() and serializer_host.is_valid():
             
-            user = User.objects.get(code=request.session['user_code'])
-            user_new_nick_name = serializer_user.data.get('nick_name')
-            if user.exists():
-                if user.nick_name != user_new_nick_name:
-                    user.nick_name = user_new_nick_name
-                    user.save(update_fields=['nick_name'])
+            host = Host.objects.filter(id=request.session['code'])
+            host_nick_name = serializer_host.data.get('nick_name')
+            if host.exists():
+                host = host[0]
+                if host.nick_name != host_nick_name:
+                    host.nick_name = host_nick_name
+                    host.save(update_fields=['nick_name'])
+            else:
+                host = Host(nick_name=host_nick_name)
+                host.save()
+                self.request.session['code'] = host.id
+
+            queryset = Room.objects.filter(host=host)
+            gcp = serializer.data.get('guest_can_pause')
+            vts = serializer.data.get('votes_to_skip')
+
+            if queryset.exists() and request.data['update']:
+                room = queryset[0]
+                room.guest_can_pause = gcp
+                room.votes_to_skip = vts
+                room.save(update_fields=['guest_can_pause', 'votes_to_skip'])
+
             else:
                 user = User(nick_name=user_nick_name)
                 user.save()

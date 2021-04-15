@@ -3,6 +3,8 @@ import random
 import uuid
 from django.db import models
 
+from functools import partial
+
 
 def generate_unique_code(length=32):
     while True:
