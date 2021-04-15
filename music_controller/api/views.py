@@ -3,9 +3,11 @@ from rest_framework import generics, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from .models import Room
-from .serializers import RoomSerializer, CreateRoomSerializer, UpdateRoomSerializer
+from .models import Room, Host
+from .serializers import RoomSerializer, CreateRoomSerializer, UpdateRoomSerializer, HostSerialiser
 import api.responses as responses
+
+import sys
 
 
 class RoomView(generics.ListAPIView):
@@ -32,19 +34,29 @@ class GetRoom(APIView):
 
 class CreateRoom(APIView):
     serializer_class = CreateRoomSerializer
+    host_serialiser = HostSerialiser
 
     def post(self, request, format=None):
         if not self.request.session.exists(self.request.session.session_key):
             self.request.session.create()
 
-        serializer = self.serializer_class(data=request.data)
-        if serializer.is_valid():
-            host = self.request.session.session_key
+        try:
+            room_data = {key: request.data[key] for key in ['guest_can_pause', 'votes_to_skip']}
+            host_data = {key: request.data[key] for key in ['nick_name']}
+        except KeyError:
+            return responses.ERROR_BAD_REQUEST
+
+        serializer = self.serializer_class(data=room_data)
+        serializer_host = self.host_serialiser(data=host_data)
+        if serializer.is_valid() and serializer_host.is_valid():
+            host = Host(nick_name=serializer_host.data.get('nick_name'))
+            host.save()
+
             queryset = Room.objects.filter(host=host)
             gcp = serializer.data.get('guest_can_pause')
             vts = serializer.data.get('votes_to_skip')
 
-            if queryset.exists():
+            if queryset.exists() and request.data['update']:
                 room = queryset[0]
                 room.guest_can_pause = gcp
                 room.votes_to_skip = vts

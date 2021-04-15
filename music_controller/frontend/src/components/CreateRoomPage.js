@@ -79,7 +79,8 @@ export default class CreateRoomPage extends Component {
       body: JSON.stringify({
         votes_to_skip: this.state.votesToSkip,
         guest_can_pause: this.state.guestCanPause,
-        host_nick_name: this.state.hostNickName,
+        nick_name: this.state.hostNickName,
+        update: false,
       }),
     };
     console.log(requestOptions);
