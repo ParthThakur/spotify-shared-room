@@ -19,6 +19,7 @@ export default class CreateRoomPage extends Component {
   static defaultProps = {
     votesToSkip: 2,
     guestCanPause: false,
+    hostNickName: "Anon",
     update: false,
     roomCode: null,
     updateCallback: () => {},
@@ -30,6 +31,8 @@ export default class CreateRoomPage extends Component {
     this.state = {
       guestCanPause: this.props.guestCanPause,
       votesToSkip: this.props.votesToSkip,
+      hostNickName: this.props.hostNickName,
+      isHostNickNameValid: true,
       backButtonText: "Cancel",
       message: "",
       isError: false,
@@ -39,6 +42,7 @@ export default class CreateRoomPage extends Component {
     this.handleUpdateRoomPressed = this.handleUpdateRoomPressed.bind(this);
     this.handleVotesChange = this.handleVotesChange.bind(this);
     this.handleGuestCanPauseChange = this.handleGuestCanPauseChange.bind(this);
+    this.handleHostNickNameChange = this.handleHostNickNameChange.bind(this);
     this.createButtons = this.createButtons.bind(this);
     this.updateButtons = this.updateButtons.bind(this);
   }
@@ -55,6 +59,19 @@ export default class CreateRoomPage extends Component {
     });
   }
 
+  handleHostNickNameChange(e) {
+    if (e.target.value.length <= 32) {
+      this.setState({
+        isHostNickNameValid: true,
+        hostNickName: e.target.value === "" ? "Anon" : e.target.value,
+      });
+    } else {
+      this.setState({
+        isHostNickNameValid: false,
+      });
+    }
+  }
+
   handleCreateRoomPressed() {
     const requestOptions = {
       method: "POST",
@@ -62,8 +79,10 @@ export default class CreateRoomPage extends Component {
       body: JSON.stringify({
         votes_to_skip: this.state.votesToSkip,
         guest_can_pause: this.state.guestCanPause,
+        host_nick_name: this.state.hostNickName,
       }),
     };
+    console.log(requestOptions);
     fetch("/api/createRoom", requestOptions)
       .then((response) => response.json())
       .then((data) => this.props.history.push(`/room/${data.code}`));
@@ -76,6 +95,7 @@ export default class CreateRoomPage extends Component {
       body: JSON.stringify({
         votes_to_skip: this.state.votesToSkip,
         guest_can_pause: this.state.guestCanPause,
+        host_nick_name: this.state.hostNickName,
         code: this.props.room_code,
       }),
     };
@@ -140,12 +160,14 @@ export default class CreateRoomPage extends Component {
     let BUTTONS = this.createButtons;
     let PLAY_PAUSE_DEFAULT = "false";
     let VOTES_TO_SKIP = 2;
+    let HOST_NICK_NAME = "Anon";
 
     if (this.props.update) {
       TITLE = "Update Room";
       BUTTONS = this.updateButtons;
       PLAY_PAUSE_DEFAULT = this.props.guest_can_pause.toString();
       VOTES_TO_SKIP = this.props.votes_to_skip;
+      HOST_NICK_NAME = this.props.hostNickName;
     }
 
     return (
@@ -191,6 +213,18 @@ export default class CreateRoomPage extends Component {
               }}
             />
             <FormHelperText>Votes Required To Skip Song</FormHelperText>
+          </FormControl>
+        </Grid>
+        <Grid item xs={12} align="center">
+          <FormControl>
+            <TextField
+              required={false}
+              type="text"
+              onChange={this.handleHostNickNameChange}
+              placeholder={HOST_NICK_NAME}
+              inputProps={{ maxLength: 32 }}
+            />
+            <FormHelperText>Choose a nick name</FormHelperText>
           </FormControl>
         </Grid>
         <Grid item xs={12} align="center">

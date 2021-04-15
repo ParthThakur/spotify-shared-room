@@ -29,7 +29,7 @@ def get_next_host():
 
 
 class Host(models.Model):
-    nick_name = models.CharField(max_length=32, unique=generate_unique_nickname)
+    nick_name = models.CharField(max_length=32, default="Anon")
 
 
 class Room(models.Model):
