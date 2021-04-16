@@ -5,9 +5,8 @@ from rest_framework import status
 from requests import Request, post
 
 from .secrets import CLIENT_ID, CLIENT_SECRET, REDIRECT_URI
-from .utils import update_or_create_user_tokens
-
-SPOTIFY_URL = 'https://accounts.spotify.com'
+from .utils import update_or_create_user_tokens, is
+from .utils import SPOTIFY_URL
 
 
 class AuthURL(APIView):
@@ -41,3 +40,8 @@ def spotify_callback(request, format=None):
         request.session.create()
     update_or_create_user_tokens(request.session.session_key, **response)
     return redirect('frontend:')
+
+
+class IsSpotifyAuthenticated(APIView):
+    def get(self, request, format=None):
+        is_authenticated = is
