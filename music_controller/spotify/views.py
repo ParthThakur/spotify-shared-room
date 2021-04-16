@@ -1,9 +1,11 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from requests import Request, post
+
 from .secrets import CLIENT_ID, CLIENT_SECRET, REDIRECT_URI
+from .utils import update_or_create_user_tokens
 
 SPOTIFY_URL = 'https://accounts.spotify.com'
 
@@ -35,4 +37,7 @@ def spotify_callback(request, format=None):
                         'client_secret': CLIENT_SECRET
                     }).json()
 
-    access_token = response.get('access_token')
+    if not request.session.exists(request.session.session_key):
+        request.session.create()
+    update_or_create_user_tokens(request.session.session_key, **response)
+    return redirect('frontend:')
