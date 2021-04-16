@@ -5,13 +5,13 @@ from rest_framework import status
 from requests import Request, post
 
 from .secrets import CLIENT_ID, CLIENT_SECRET, REDIRECT_URI
-from .utils import update_or_create_user_tokens, is
+from .utils import update_or_create_user_tokens, is_spotify_authenticated
 from .utils import SPOTIFY_URL
 
 
 class AuthURL(APIView):
     def get(self, request, format=None):
-        scopes = 'spotify-read-playback user-modify-playback-state user-read-currently-playing'
+        scopes = 'user-read-playback-state user-modify-playback-state user-read-currently-playing'
         url = Request('GET', f'{SPOTIFY_URL}/authorize',
                       params={
                           'scope': scopes,
@@ -44,4 +44,6 @@ def spotify_callback(request, format=None):
 
 class IsSpotifyAuthenticated(APIView):
     def get(self, request, format=None):
-        is_authenticated = is
+        is_authenticated = is_spotify_authenticated(
+            self.request.session.session_key)
+        return Response({'status': is_authenticated}, status=status.HTTP_200_OK)

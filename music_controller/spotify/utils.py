@@ -19,7 +19,7 @@ def update_or_create_user_tokens(session_id, **kwargs):
     tokens = get_user_tokens(session_id)
 
     if tokens:
-        expires_in = timezone.now() + timezone(seconds=kwargs.get('expires_in'))
+        expires_in = timezone.now() + timezone.timedelta(seconds=kwargs.get('expires_in'))
 
         tokens.expires_in = expires_in
         tokens.access_token = kwargs.get('access_token')
@@ -30,6 +30,8 @@ def update_or_create_user_tokens(session_id, **kwargs):
                                    'refresh_token',
                                    'token_type'])
     else:
+        kwargs['expires_in'] = timezone.timedelta(
+            seconds=kwargs['expires_in']) + timezone.now()
         tokens = SpotifyToken(
             user=session_id, **{key: kwargs[key] for key in kwargs})
         tokens.save()
