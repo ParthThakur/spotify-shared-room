@@ -165,6 +165,7 @@ export default class CreateRoomPage extends Component {
     let PLAY_PAUSE_DEFAULT = "false";
     let VOTES_TO_SKIP = 2;
     let HOST_NICK_NAME = "Anon";
+    let HOST_NAME = "Anonymous";
 
     if (this.props.update) {
       TITLE = "Update Room";
@@ -175,17 +176,16 @@ export default class CreateRoomPage extends Component {
     }
 
     return (
-      <Grid container spacing={1}>
-        <Grid item xs={12} align="center">
+      <Grid container spacing={1} align="center">
+        <Grid item xs={12}>
           <Typography component={"h4"} variant="h4">
             {TITLE}
           </Typography>
         </Grid>
-        <Grid item xs={12} align="center">
-          <FormControl component="fieldset">
-            <FormHelperText>Guest Control of Playback State</FormHelperText>
+        <Grid item xs={12}>
+          <FormControl>
+            <FormHelperText>Guest control of playback:</FormHelperText>
             <RadioGroup
-              row
               defaultValue={PLAY_PAUSE_DEFAULT}
               onChange={this.handleGuestCanPauseChange}
             >
@@ -193,34 +193,32 @@ export default class CreateRoomPage extends Component {
                 value="true"
                 control={<Radio color="primary" />}
                 label="Play/Pause"
-                labelPlacement="bottom"
               />
               <FormControlLabel
                 value="false"
                 control={<Radio color="secondary" />}
                 label="No Control"
-                labelPlacement="bottom"
               />
             </RadioGroup>
           </FormControl>
         </Grid>
-        <Grid item xs={12} align="center">
+        <Grid item xs={12}>
           <FormControl>
+            <FormHelperText>Votes required to skip song:</FormHelperText>
             <TextField
               required={true}
               type="number"
               onChange={this.handleVotesChange}
               defaultValue={VOTES_TO_SKIP}
               inputProps={{
-                min: 1,
-                style: { textAlign: "center" },
+                min: 0,
               }}
             />
-            <FormHelperText>Votes Required To Skip Song</FormHelperText>
           </FormControl>
         </Grid>
-        <Grid item xs={12} align="center">
+        <Grid item xs={12}>
           <FormControl>
+            <FormHelperText>Choose a nick name</FormHelperText>
             <TextField
               required={false}
               type="text"
@@ -228,13 +226,24 @@ export default class CreateRoomPage extends Component {
               placeholder={HOST_NICK_NAME}
               inputProps={{ maxLength: 32 }}
             />
-            <FormHelperText>Choose a nick name</FormHelperText>
           </FormControl>
         </Grid>
-        <Grid item xs={12} align="center">
+        <Grid item xs={12}>
+          <FormControl>
+            <FormHelperText>Full Name</FormHelperText>
+            <TextField
+              required={false}
+              type="text"
+              onChange={() => {}}
+              placeholder={HOST_NAME}
+              inputProps={{ maxLength: 32 }}
+            />
+          </FormControl>
+        </Grid>
+        <Grid item xs={12}>
           {BUTTONS()}
         </Grid>
-        <Grid item xs={12} align="center">
+        <Grid item xs={12}>
           <Collapse in={this.state.message != ""}>
             <Alert
               severity={this.state.isError ? "error" : "success"}
