@@ -8,8 +8,15 @@ class UserSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class GuestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('code',)
+
+
 class RoomSerializer(serializers.ModelSerializer):
-    users = UserSerializer(many=True, read_only=True)
+    guests = GuestSerializer(many=True, read_only=True)
+    host = UserSerializer(read_only=True)
 
     class Meta:
         model = Room
