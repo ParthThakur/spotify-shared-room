@@ -11,6 +11,7 @@ from .utils import SPOTIFY_URL
 
 class AuthURL(APIView):
     def get(self, request, format=None):
+        room = self.request.session['room_code']
         scopes = 'user-read-playback-state user-modify-playback-state user-read-currently-playing'
         url = Request('GET', f'{SPOTIFY_URL}/authorize',
                       params={
@@ -39,7 +40,7 @@ def spotify_callback(request, format=None):
     if not request.session.exists(request.session.session_key):
         request.session.create()
     update_or_create_user_tokens(request.session.session_key, **response)
-    return redirect('frontend:')
+    return redirect(f'frontend:current_room', roomCode=request.session.get('room_code'))
 
 
 class IsSpotifyAuthenticated(APIView):
