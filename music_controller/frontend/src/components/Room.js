@@ -14,6 +14,7 @@ export default class Room extends Component {
       isHost: false,
       showSettings: false,
       spotifyAuthenticated: false,
+      song: {},
     };
     this.roomCode = this.props.match.params.roomCode;
     this.getRoomDetails();
@@ -80,6 +81,24 @@ export default class Room extends Component {
     );
   }
 
+  getCurrentSong() {
+    fetch("/spotify/getCurrentSong")
+      .then((response) => {
+        if (!response.ok) {
+          return {};
+        } else {
+          return response.json();
+        }
+      })
+      .then((data) => this.setState({ song: data }));
+
+    return (
+      <Grid item xs={12}>
+        {this.state.song.title}
+      </Grid>
+    );
+  }
+
   renderSettings() {
     return (
       <Grid container spacing={1} align="center">
@@ -110,10 +129,8 @@ export default class Room extends Component {
           <Grid item xs={12} align="left">
             <h1>Room details:</h1>
             <p>Room code: {this.roomCode}</p>
-            <p>Votes: {this.state.votesToSkip}</p>
-            <p>Guest can pause: {this.state.guestsCanPause.toString()}</p>
-            <p>Host: {this.state.isHost.toString()}</p>
           </Grid>
+          {this.state.spotifyAuthenticated ? this.getCurrentSong() : null}
           <Grid item xs={12}>
             <ButtonGroup>
               <Button
