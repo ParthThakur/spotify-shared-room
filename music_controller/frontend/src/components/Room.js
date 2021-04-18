@@ -22,6 +22,15 @@ export default class Room extends Component {
     this.leaveRoom = this.leaveRoom.bind(this);
     this.toggleSettings = this.toggleSettings.bind(this);
     this.authenticateSpotify = this.authenticateSpotify.bind(this);
+    this.getCurrentSong = this.getCurrentSong.bind(this);
+  }
+
+  componentDidMount() {
+    this.spotifyPollInterval = setInterval(this.getCurrentSong, 5000);
+  }
+
+  componentWillUnmount() {
+    clearInterval(this.spotifyPollInterval);
   }
 
   getRoomDetails() {
@@ -91,12 +100,6 @@ export default class Room extends Component {
         }
       })
       .then((data) => this.setState({ song: data }));
-
-    return (
-      <Grid item xs={12}>
-        {this.state.song.title}
-      </Grid>
-    );
   }
 
   renderSettings() {
@@ -130,7 +133,7 @@ export default class Room extends Component {
             <h1>Room details:</h1>
             <p>Room code: {this.roomCode}</p>
           </Grid>
-          {this.state.spotifyAuthenticated ? this.getCurrentSong() : null}
+          {this.state.spotifyAuthenticated ? this.state.song.title : null}
           <Grid item xs={12}>
             <ButtonGroup>
               <Button
