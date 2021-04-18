@@ -39,10 +39,14 @@ def update_or_create_user_tokens(session_id, **kwargs):
 
 def is_spotify_authenticated(session_id):
     tokens = get_user_tokens(session_id)
+    print(tokens.expires_in)
     if tokens:
         expiry = tokens.expires_in
         if expiry <= timezone.now():
-            refresh_spotify_token(session_id, tokens)
+            try:
+                refresh_spotify_token(session_id, tokens)
+            except TypeError:
+                return False
 
         return True
 
@@ -50,12 +54,15 @@ def is_spotify_authenticated(session_id):
 
 
 def refresh_spotify_token(session_id, tokens):
-    response = post(f'{SPOTIFY_YRL}/api/token', data={
+    response = post(f'{SPOTIFY_URL}/api/token', data={
         'grant_type': 'refesh_token',
         'refresh_token': tokens.refresh_token,
         'client_id': CLIENT_ID,
         'client_secret': CLIENT_SECRET
     }).json()
+
+    if 'error' in response:
+        raise TypeError(response)
 
     update_or_create_user_tokens(
         session_id, **{key: response[key] for key in response})
