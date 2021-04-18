@@ -3,9 +3,10 @@ from .secrets import CLIENT_SECRET, CLIENT_ID
 from django.db.models import ObjectDoesNotExist
 from django.utils import timezone
 from datetime import timedelta
-from requests import post
+from requests import post, put, get
 
-SPOTIFY_URL = 'https://accounts.spotify.com'
+SPOTIFY_URL = 'https://accounts.spotify.com/'
+BASE_URL = 'https://api.spotify.com/v1/me/'
 
 
 def get_user_tokens(session_id):
@@ -39,7 +40,6 @@ def update_or_create_user_tokens(session_id, **kwargs):
 
 def is_spotify_authenticated(session_id):
     tokens = get_user_tokens(session_id)
-    print(tokens.expires_in)
     if tokens:
         expiry = tokens.expires_in
         if expiry <= timezone.now():
@@ -54,7 +54,7 @@ def is_spotify_authenticated(session_id):
 
 
 def refresh_spotify_token(session_id, tokens):
-    response = post(f'{SPOTIFY_URL}/api/token', data={
+    response = post(f'{SPOTIFY_URL}api/token', data={
         'grant_type': 'refesh_token',
         'refresh_token': tokens.refresh_token,
         'client_id': CLIENT_ID,
@@ -66,3 +66,22 @@ def refresh_spotify_token(session_id, tokens):
 
     update_or_create_user_tokens(
         session_id, **{key: response[key] for key in response})
+
+
+def make_spotify_api_request(session_id, endpoint, post=False, put=False):
+    tokens = get_user_tokens(session_id)
+    headers = {'Content-Type': 'application/json',
+               'Authorization': 'Bearer ' + tokens.access_token}
+
+    if post:
+        post(BASE_URL + endpoint, headers=headers)
+
+    if put:
+        put(BASE_URL + endpoint, headers=headers)
+
+    response = get(BASE_URL + endpoint, {}, headers=headers)
+
+    try:
+        return response.json()
+    except Exception as e:
+        return {'Error': 'Could not make request', 'error_description': str(e), 'spotify_status': response.status_code}

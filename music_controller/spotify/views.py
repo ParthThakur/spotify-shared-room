@@ -1,19 +1,22 @@
 from django.shortcuts import render, redirect
+from django.db.models import ObjectDoesNotExist
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from requests import Request, post
 
 from .secrets import CLIENT_ID, CLIENT_SECRET, REDIRECT_URI
-from .utils import update_or_create_user_tokens, is_spotify_authenticated
+from .utils import update_or_create_user_tokens, is_spotify_authenticated, make_spotify_api_request
 from .utils import SPOTIFY_URL
+from api.models import Room
+from api.responses import ERROR_DOES_NOT_EXIST
 
 
 class AuthURL(APIView):
     def get(self, request, format=None):
         room = self.request.session['room_code']
         scopes = 'user-read-playback-state user-modify-playback-state user-read-currently-playing'
-        url = Request('GET', f'{SPOTIFY_URL}/authorize',
+        url = Request('GET', f'{SPOTIFY_URL}authorize',
                       params={
                           'scope': scopes,
                           'response_type': 'code',
@@ -28,7 +31,7 @@ def spotify_callback(request, format=None):
     code = request.GET.get('code')
     error = request.GET.get('error')
 
-    response = post(f'{SPOTIFY_URL}/api/token',
+    response = post(f'{SPOTIFY_URL}api/token',
                     data={
                         'grant_type': 'authorization_code',
                         'code': code,
@@ -37,14 +40,28 @@ def spotify_callback(request, format=None):
                         'client_secret': CLIENT_SECRET
                     }).json()
 
-    if not request.session.exists(request.session.session_key):
-        request.session.create()
-    update_or_create_user_tokens(request.session.session_key, **response)
+    update_or_create_user_tokens(request.session['user_code'], **response)
     return redirect(f'frontend:current_room', roomCode=request.session.get('room_code'))
 
 
 class IsSpotifyAuthenticated(APIView):
     def get(self, request, format=None):
         is_authenticated = is_spotify_authenticated(
-            self.request.session.session_key)
+            self.request.session['user_code'])
         return Response({'status': is_authenticated}, status=status.HTTP_200_OK)
+
+
+class CurrentSong(APIView):
+    def get(self, request, format=None):
+        room_code = self.request.session.get('room_code')
+
+        try:
+            room = Room.objects.get(code=room_code)
+            host = room.host
+        except ObjectDoesNotExist:
+            return ERROR_DOES_NOT_EXIST
+
+        endpoint = 'player/currently-playing'
+        response = make_spotify_api_request(host.code, endpoint)
+
+        return Response(response, status=status.HTTP_200_OK)
