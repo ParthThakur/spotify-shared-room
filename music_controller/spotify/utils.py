@@ -122,3 +122,7 @@ def play_song(host_id):
 
 def pause_song(host_id):
     return make_spotify_api_request(host_id, 'player/pause', put_=True)
+
+
+def skip_song(host_id):
+    return make_spotify_api_request(host_id, 'player/next', post_=True)

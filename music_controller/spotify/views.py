@@ -6,7 +6,8 @@ from rest_framework import status
 from requests import Request, post
 
 from .secrets import CLIENT_ID, CLIENT_SECRET, REDIRECT_URI
-from .utils import update_or_create_user_tokens, is_spotify_authenticated, make_spotify_api_request, get_song_details, pause_song, play_song
+from .utils import update_or_create_user_tokens, is_spotify_authenticated, make_spotify_api_request
+from .utils import get_song_details, pause_song, play_song, skip_song
 from .utils import SPOTIFY_URL
 from api.models import Room
 from api.responses import ERROR_DOES_NOT_EXIST, ERROR_NOT_ALLOWED
@@ -104,3 +105,20 @@ class PlaySong(APIView):
             return Response({}, status=status.HTTP_204_NO_CONTENT)
 
         return ERROR_NOT_ALLOWED
+
+
+class SkipSong(APIView):
+    def post(self, request, format=None):
+        room_code = self.request.session.get('room_code')
+        try:
+            room = Room.objects.get(code=room_code)
+            host = room.host
+        except ObjectDoesNotExist:
+            return ERROR_DOES_NOT_EXIST
+
+        if self.request.session.get('user_code') == host.code:
+            skip_song(host.code)
+        else:
+            pass
+
+        return Response({}, status=status.HTTP_204_NO_CONTENT)
