@@ -3,10 +3,12 @@ import {
   Grid,
   Typography,
   Card,
-  Iconbutton,
+  IconButton,
   LinearProgress,
 } from "@material-ui/core";
-import { PlayArrowIcon, SkipNextIcon, PauseIcon } from "@material-ui/icons";
+import PlayArrowIcon from "@material-ui/icons/PlayArrow";
+import PauseIcon from "@material-ui/icons/Pause";
+import SkipNextIcon from "@material-ui/icons/SkipNext";
 
 export default class MusicPlayer extends Component {
   constructor(props) {
@@ -22,7 +24,7 @@ export default class MusicPlayer extends Component {
           <Grid item xs={4}>
             <img src={this.props.image_url} height="100%" width="100%" />
           </Grid>
-          <Grid xs={8}>
+          <Grid item xs={8}>
             <Typography component="h5" variant="h5">
               {this.props.title}
             </Typography>
@@ -30,14 +32,16 @@ export default class MusicPlayer extends Component {
               {this.props.artist}
             </Typography>
             <div>
-              <Iconbutton>
+              <IconButton>
                 {this.props.is_playing ? <PauseIcon /> : <PlayArrowIcon />}
-              </Iconbutton>
-              <Iconbutton>{<SkipNextIcon />}</Iconbutton>
+              </IconButton>
+              <IconButton>
+                <SkipNextIcon />
+              </IconButton>
             </div>
           </Grid>
-          <LinearProgress variant="determinant" value={songProgress} />
         </Grid>
+        <LinearProgress variant="determinate" value={songProgress} />
       </Card>
     );
   }

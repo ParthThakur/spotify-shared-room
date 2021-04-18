@@ -3,6 +3,7 @@ import { Button, ButtonGroup, Grid, Typography } from "@material-ui/core";
 import { Link } from "react-router-dom";
 
 import CreateRoomPage from "./CreateRoomPage";
+import MusicPlayer from "./MusicPlayer";
 
 export default class Room extends Component {
   constructor(props) {
@@ -26,7 +27,7 @@ export default class Room extends Component {
   }
 
   componentDidMount() {
-    this.spotifyPollInterval = setInterval(this.getCurrentSong, 5000);
+    this.spotifyPollInterval = setInterval(this.getCurrentSong, 1000);
   }
 
   componentWillUnmount() {
@@ -128,25 +129,31 @@ export default class Room extends Component {
       return this.renderSettings();
     } else {
       return (
-        <Grid container spacing={1} align="center">
-          <Grid item xs={12} align="left">
-            <h1>Room details:</h1>
-            <p>Room code: {this.roomCode}</p>
+        <div>
+          <div>
+            {this.state.spotifyAuthenticated ? (
+              <MusicPlayer {...this.state.song} />
+            ) : null}
+          </div>
+          <Grid container spacing={1} align="center">
+            <Grid item xs={12} align="left">
+              <h1>Room details:</h1>
+              <p>Room code: {this.roomCode}</p>
+            </Grid>
+            <Grid item xs={12}>
+              <ButtonGroup>
+                <Button
+                  variant="contained"
+                  color="default"
+                  onClick={this.leaveRoom}
+                >
+                  Leave Room
+                </Button>
+                {this.state.isHost ? this.showSettingsButton() : null}
+              </ButtonGroup>
+            </Grid>
           </Grid>
-          {this.state.spotifyAuthenticated ? this.state.song.title : null}
-          <Grid item xs={12}>
-            <ButtonGroup>
-              <Button
-                variant="contained"
-                color="default"
-                onClick={this.leaveRoom}
-              >
-                Leave Room
-              </Button>
-              {this.state.isHost ? this.showSettingsButton() : null}
-            </ButtonGroup>
-          </Grid>
-        </Grid>
+        </div>
       );
     }
   }
