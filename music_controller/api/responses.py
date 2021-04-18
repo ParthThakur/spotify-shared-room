@@ -11,6 +11,8 @@ ERROR_NOT_IN_ROOM = Response(
     {'Error': 'Not currently in room'}, status=status.HTTP_400_BAD_REQUEST)
 ERROR_NOT_A_HOST = Response(
     {'Error': 'User not a host'}, status=status.HTTP_403_FORBIDDEN)
+ERROR_NOT_ALLOWED = Response(
+    {'Error': 'Action not allowed'}, status=status.HTTP_403_FORBIDDEN)
 
 SUCCESS_JOINED = Response(
     {'Success': 'Room joined successfully'}, status=status.HTTP_200_OK)

@@ -24,11 +24,9 @@ def update_or_create_user_tokens(session_id, **kwargs):
 
         tokens.expires_in = expires_in
         tokens.access_token = kwargs.get('access_token')
-        tokens.refresh_token = kwargs.get('refresh_token')
         tokens.token_type = kwargs.get('token_type')
         tokens.save(update_fields=['expires_in',
                                    'access_token',
-                                   'refresh_token',
                                    'token_type'])
     else:
         kwargs['expires_in'] = timezone.timedelta(
@@ -68,7 +66,7 @@ def refresh_spotify_token(session_id, tokens):
         session_id, **{key: response[key] for key in response})
 
 
-def make_spotify_api_request(session_id, endpoint, post=False, put=False):
+def make_spotify_api_request(session_id, endpoint, post_=False, put_=False):
     tokens = get_user_tokens(session_id)
     headers = {'Content-Type': 'application/json',
                'Authorization': 'Bearer ' + tokens.access_token}
@@ -116,3 +114,11 @@ def get_song_details(response):
     }
 
     return song
+
+
+def play_song(host_id):
+    return make_spotify_api_request(host_id, 'player/play', put_=True)
+
+
+def pause_song(host_id):
+    return make_spotify_api_request(host_id, 'player/pause', put_=True)

@@ -27,7 +27,8 @@ export default class Room extends Component {
   }
 
   componentDidMount() {
-    this.spotifyPollInterval = setInterval(this.getCurrentSong, 1000);
+    this.getCurrentSong();
+    this.spotifyPollInterval = setInterval(this.getCurrentSong, 5000);
   }
 
   componentWillUnmount() {
