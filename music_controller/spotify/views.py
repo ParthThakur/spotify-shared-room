@@ -6,7 +6,7 @@ from rest_framework import status
 from requests import Request, post
 
 from .secrets import CLIENT_ID, CLIENT_SECRET, REDIRECT_URI
-from .utils import update_or_create_user_tokens, is_spotify_authenticated, make_spotify_api_request
+from .utils import update_or_create_user_tokens, is_spotify_authenticated, make_spotify_api_request, get_song_details
 from .utils import SPOTIFY_URL
 from api.models import Room
 from api.responses import ERROR_DOES_NOT_EXIST
@@ -64,4 +64,9 @@ class CurrentSong(APIView):
         endpoint = 'player/currently-playing'
         response = make_spotify_api_request(host.code, endpoint)
 
-        return Response(response, status=status.HTTP_200_OK)
+        if 'item' not in response:
+            return Response({}, status=status.HTTP_204_NO_CONTENT)
+
+        song = get_song_details(response)
+
+        return Response(song, status=status.HTTP_200_OK)

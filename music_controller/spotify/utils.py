@@ -85,3 +85,34 @@ def make_spotify_api_request(session_id, endpoint, post=False, put=False):
         return response.json()
     except Exception as e:
         return {'Error': 'Could not make request', 'error_description': str(e), 'spotify_status': response.status_code}
+
+
+def get_song_details(response):
+
+    item = response.get('item')
+    duration = item.get('duration_ms')
+    progress = response.get('progress_ms')
+    album_cover = item.get('album').get('images')[0].get('url')
+    is_playing = response.get('is_playing')
+    song_id = item.get('id')
+
+    artist_string = ""
+
+    for i, artist in enumerate(item.get('artists')):
+        if i > 0:
+            artist_string += ", "
+        name = artist.get('name')
+        artist_string += name
+
+    song = {
+        'title': item.get('name'),
+        'artist': artist_string,
+        'duration': duration,
+        'time': progress,
+        'image_url': album_cover,
+        'is_playing': is_playing,
+        'votes': 0,
+        'id': song_id
+    }
+
+    return song
