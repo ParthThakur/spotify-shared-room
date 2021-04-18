@@ -131,11 +131,7 @@ export default class Room extends Component {
     } else {
       return (
         <div>
-          <div>
-            {this.state.spotifyAuthenticated ? (
-              <MusicPlayer {...this.state.song} />
-            ) : null}
-          </div>
+          <div>{<MusicPlayer {...this.state.song} />}</div>
           <Grid container spacing={1} align="center">
             <Grid item xs={12} align="left">
               <h1>Room details:</h1>
