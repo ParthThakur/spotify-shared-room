@@ -110,6 +110,7 @@ def get_song_details(response):
         'image_url': album_cover,
         'is_playing': is_playing,
         'votes': 0,
+        'votes_needed': 0,
         'id': song_id
     }
 

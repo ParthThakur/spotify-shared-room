@@ -9,6 +9,7 @@ from .secrets import CLIENT_ID, CLIENT_SECRET, REDIRECT_URI
 from .utils import update_or_create_user_tokens, is_spotify_authenticated, make_spotify_api_request
 from .utils import get_song_details, pause_song, play_song, skip_song
 from .utils import SPOTIFY_URL
+from .models import Votes
 from api.models import Room
 from api.responses import ERROR_DOES_NOT_EXIST, ERROR_NOT_ALLOWED
 
@@ -69,8 +70,19 @@ class CurrentSong(APIView):
             return Response({}, status=status.HTTP_204_NO_CONTENT)
 
         song = get_song_details(response)
+        song['votes'] = len(Votes.objects.filter(
+            room=room, song_id=song['id']))
+        song['votes_needed'] = room.votes_to_skip
+        self.update_room_song(room, song['id'])
 
         return Response(song, status=status.HTTP_200_OK)
+
+    def update_room_song(self, room, song_id):
+        current_song = room.current_song
+        if current_song != song_id:
+            room.current_song = song_id
+            room.save(update_fields=['current_song'])
+            votes = Votes.objects.filter(room=room).delete()
 
 
 class PauseSong(APIView):
@@ -110,15 +122,27 @@ class PlaySong(APIView):
 class SkipSong(APIView):
     def post(self, request, format=None):
         room_code = self.request.session.get('room_code')
+
         try:
             room = Room.objects.get(code=room_code)
             host = room.host
+            user = self.request.session.get('user_code')
+            votes = Votes.objects.filter(room=room, song_id=room.current_song)
+            votes_needed = room.votes_to_skip
+
+            if user == host.code or len(votes) + 1 >= votes_needed:
+                votes.delete()
+                skip_song(host.code)
+            else:
+                if votes.filter(user=user):
+                    return Response({'Error': 'You already voted'}, status=status.HTTP_403_FORBIDDEN)
+
+                vote = Votes(user=user,
+                             room=room,
+                             song_id=room.current_song)
+                vote.save()
+
         except ObjectDoesNotExist:
             return ERROR_DOES_NOT_EXIST
-
-        if self.request.session.get('user_code') == host.code:
-            skip_song(host.code)
-        else:
-            pass
 
         return Response({}, status=status.HTTP_204_NO_CONTENT)
